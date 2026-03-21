@@ -1,0 +1,617 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIOps Admin Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Custom Scrollbar Styles - HIGHLY VISIBLE */
+        ::-webkit-scrollbar {
+            width: 14px;
+            height: 14px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 10px;
+            border: 2px solid #1e293b;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #60a5fa;
+        }
+
+        ::-webkit-scrollbar-thumb:active {
+            background: #2563eb;
+        }
+
+        /* Firefox Scrollbar */
+        * {
+            scrollbar-width: auto;
+            scrollbar-color: #3b82f6 #1e293b;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        body.sidebar-open {
+            /* Prevent the page from stealing touch scroll while the sidebar is open. */
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            min-height: 100vh;
+            width: 100vw;
+            overflow: visible;
+            position: relative;
+        }
+
+        .sidebar {
+            background-color: #0f172a;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            padding-top: 5rem;
+            padding-bottom: 1rem;
+            display: block;
+            height: 100dvh;
+            max-height: 100dvh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable both-edges;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 260px;
+            z-index: 1100;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar h2 {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            padding-left: 0;
+        }
+
+        .sidebar-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .sidebar-footer {
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: #1e293b;
+            border-radius: 10px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 10px;
+            border: 2px solid #1e293b;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #60a5fa;
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .nav-item {
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            color: white;
+            background: rgba(59, 130, 246, 0.1);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            text-align: left;
+            line-height: 1.2;
+        }
+
+        .nav-item:hover {
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .nav-item.active {
+            background: rgba(59, 130, 246, 0.3);
+            font-weight: 600;
+        }
+
+        .menu-toggle {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1200;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s;
+        }
+
+        .menu-toggle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .menu-toggle span {
+            width: 22px;
+            height: 3px;
+            background: white;
+            border-radius: 3px;
+            transition: all 0.3s;
+        }
+
+        .menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(8px, 8px);
+        }
+
+        .menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.55);
+            z-index: 1050;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .sidebar-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .main-content {
+            min-height: 100vh;
+            overflow-y: visible;
+            overflow-x: hidden;
+            padding: 2rem;
+            padding-top: 5rem;
+            padding-bottom: 4rem;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #pageTitle {
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        .main-content .glass-card {
+            padding: 1.5rem;
+        }
+
+        .main-content .glass-card h3 {
+            margin: 0 0 0.75rem 0;
+        }
+
+        .tab-content > h2 {
+            margin: 0 0 1rem 0;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .user-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge-admin {
+            background: rgba(255, 100, 100, 0.2);
+            color: #ffadad;
+        }
+
+        .badge-user {
+            background: rgba(100, 255, 100, 0.2);
+            color: #adffad;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            padding: 1.5rem;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.85em;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: white;
+        }
+
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+
+        @media (max-width: 900px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-content">
+                <h2>Admin Portal</h2>
+                <div class="nav-item active" onclick="showTab('dashboard', this)">Dashboard</div>
+                <div class="nav-item" onclick="showTab('users', this)">User Management</div>
+                <div class="nav-item" onclick="showTab('health', this)">System Health</div>
+                <div class="nav-item" onclick="showTab('config', this)">Configuration</div>
+                <div class="nav-item" onclick="showTab('logs', this)">Login History</div>
+                <div class="nav-item" onclick="showTab('audit', this)">Audit Logs</div>
+                <div class="nav-item" onclick="showTab('alerts', this)">Alert Settings</div>
+            </div>
+
+            <div class="glass-card sidebar-footer" style="padding:1rem;">
+                <small style="color:#94a3b8">Logged in as</small>
+                <div id="usernameDisplay" style="font-weight:bold; color:#ffadad;">Admin</div>
+                <button onclick="logout()"
+                    style="margin-top:1rem; background:rgba(255,255,255,0.1); border:none; padding:0.5rem; width:100%; color:white; border-radius:4px; cursor:pointer;">Logout</button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <!-- Header -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+                <h1 id="pageTitle">System Administration</h1>
+                <div class="glass-card" style="padding:0.5rem 1rem;">
+                    <span id="clock">Loading...</span>
+                </div>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div id="tab-dashboard" class="tab-content active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Users</div>
+                        <div class="stat-value" id="stat-users">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Logins (24h)</div>
+                        <div class="stat-value" id="stat-logins">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">System Uptime</div>
+                        <div class="stat-value" id="stat-uptime">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Database Status</div>
+                        <div class="stat-value" id="stat-db">-</div>
+                    </div>
+                </div>
+                <div class="glass-card">
+                    <h3>Quick Overview</h3>
+                    <p style="color:#94a3b8; margin-bottom: 0.75rem;">
+                        Welcome to the AIOps Admin Portal. This area is for system administration tasks like managing users,
+                        reviewing login activity, tuning alert thresholds, and validating backend health.
+                    </p>
+                    <div style="display:grid; gap: 0.5rem; color:#cbd5e1;">
+                        <div><b>Dashboard:</b> High-level stats (users, recent logins, uptime, DB status).</div>
+                        <div><b>User Management:</b> Add/delete users and assign roles.</div>
+                        <div><b>System Health:</b> Check MongoDB, data file status, and server metrics (CPU/RAM/uptime).</div>
+                        <div><b>Configuration:</b> Update CPU/memory/latency thresholds used by monitoring and alerts.</div>
+                        <div><b>Login History:</b> Review recent logins tracked in MongoDB.</div>
+                        <div><b>Audit Logs:</b> See admin actions (user changes, config updates, exports, test emails).</div>
+                        <div><b>Alert Settings:</b> Verify email alerting and review alert history.</div>
+                    </div>
+                    <div style="margin-top: 0.75rem; color:#94a3b8; font-size: 0.9rem;">
+                        Tip: If something doesn’t load, restart the backend and hard refresh the browser (Ctrl+F5).
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Management Tab -->
+            <div id="tab-users" class="tab-content">
+                <div class="glass-card" style="margin-bottom:2rem;">
+                    <h3>Add New User</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr auto; gap:1rem; align-items:end;">
+                        <div class="input-group">
+                            <label>Username</label>
+                            <input type="text" id="new-username" placeholder="Enter username">
+                        </div>
+                        <div class="input-group">
+                            <label>Password</label>
+                            <input type="password" id="new-password" placeholder="Enter password">
+                        </div>
+                        <div class="input-group">
+                            <label>Role</label>
+                            <select id="new-role"
+                                style="padding:0.8rem; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; border-radius:8px;">
+                                <option value="USER">USER</option>
+                                <option value="ADMIN">ADMIN</option>
+                            </select>
+                        </div>
+                        <button class="btn-primary" onclick="addUser()"
+                            style="height:fit-content; padding:0.8rem 1.5rem;"> Add User</button>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <h3>Existing Users</h3>
+                    <div class="table-container" style="max-height: 500px; overflow-y: auto;">
+                        <table style="width:100%; text-align:left; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                    <th style="padding:10px;">Username</th>
+                                    <th style="padding:10px;">Role</th>
+                                    <th style="padding:10px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTable">
+                                <tr>
+                                    <td colspan="3" style="padding:20px; text-align:center;">Loading users...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Health Tab -->
+            <div id="tab-health" class="tab-content">
+                <div class="glass-card" style="margin-bottom:2rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3>System Health Status</h3>
+                        <button class="btn-primary" onclick="loadSystemHealth()" style="padding:0.5rem 1rem;">
+                            Refresh</button>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:2rem;">
+                    <div class="glass-card">
+                        <h3>MongoDB</h3>
+                        <div id="health-mongodb">Loading...</div>
+                    </div>
+                    <div class="glass-card">
+                        <h3>Data File</h3>
+                        <div id="health-datafile">Loading...</div>
+                    </div>
+                    <div class="glass-card">
+                        <h3>Server Resources</h3>
+                        <div id="health-server">Loading...</div>
+                    </div>
+                    <div class="glass-card">
+                        <h3>Export Data</h3>
+                        <p style="color:#94a3b8; margin-bottom:1rem;">Export login history and system data</p>
+                        <button class="btn-primary" onclick="exportLogs()" style="width:100%;"> Export Login History
+                            (JSON)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuration Tab -->
+            <div id="tab-config" class="tab-content">
+                <div class="glass-card">
+                    <h3>Alert Thresholds</h3>
+                    <p style="color:#94a3b8; margin-bottom:1rem;">Configure system-wide alert thresholds</p>
+
+                    <div class="input-group">
+                        <label>CPU High Threshold (%)</label>
+                        <input type="number" id="conf-cpu" value="80">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Memory Critical (GB)</label>
+                        <input type="number" id="conf-mem" value="8">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Latency Warning (ms)</label>
+                        <input type="number" id="conf-lat" value="1000">
+                    </div>
+
+                    <button class="btn-primary" onclick="saveConfig()" style="width:100%; margin-top:1rem;"> Save
+                        Config</button>
+                </div>
+            </div>
+
+            <!-- Login History Tab -->
+            <div id="tab-logs" class="tab-content">
+                <div class="glass-card">
+                    <h3>Login History</h3>
+                    <div class="table-container" style="max-height: 600px; overflow-y: auto;">
+                        <table style="width:100%; text-align:left; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                    <th style="padding:10px;">User</th>
+                                    <th style="padding:10px;">Role</th>
+                                    <th style="padding:10px;">Time</th>
+                                    <th style="padding:10px;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="loginHistoryTable">
+                                <tr>
+                                    <td colspan="4" style="padding:20px; text-align:center;">Loading logs...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audit Logs Tab -->
+            <div id="tab-audit" class="tab-content">
+                <div class="glass-card" style="margin-bottom: 1rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap: 1rem; flex-wrap: wrap;">
+                        <h3 style="margin: 0;">Audit Logs</h3>
+                        <div style="display:flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                            <input id="auditFilter" type="text" placeholder="Filter (action/admin/ip)..."
+                                style="padding:0.6rem 0.8rem; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; min-width: 220px;" />
+                            <button class="btn-primary" onclick="loadAuditLogs()" style="padding: 0.6rem 1rem; width: auto;"> Refresh</button>
+                            <button class="btn-primary" onclick="exportAuditLogs()" style="padding: 0.6rem 1rem; width: auto;"> Export JSON</button>
+                        </div>
+                    </div>
+                    <div style="color:#94a3b8; margin-top: 0.6rem;">
+                        Records admin actions like user changes, config updates, exports, and email tests.
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <div class="table-container" style="max-height: 650px; overflow-y: auto;">
+                        <table style="width:100%; text-align:left; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                    <th style="padding:10px;">Time</th>
+                                    <th style="padding:10px;">Admin</th>
+                                    <th style="padding:10px;">Action</th>
+                                    <th style="padding:10px;">Details</th>
+                                    <th style="padding:10px;">IP</th>
+                                    <th style="padding:10px;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditLogsTable">
+                                <tr>
+                                    <td colspan="6" style="padding:20px; text-align:center;">Loading audit logs...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alert Settings Tab -->
+            <div id="tab-alerts" class="tab-content">
+                <h2>Email Alert Settings</h2>
+
+                <!-- Email Configuration Card -->
+                <div class="glass-card" style="margin-bottom: 2rem;">
+                    <h3 style="margin-top: 0;">Email Configuration</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1rem; margin-bottom: 1.5rem;">
+                        <div style="color: #94a3b8;">Status:</div>
+                        <div id="emailStatus" style="font-weight: bold;">Loading...</div>
+
+                        <div style="color: #94a3b8;">From Email:</div>
+                        <div id="fromEmail">-</div>
+
+                        <div style="color: #94a3b8;">Recipients:</div>
+                        <div id="recipientCount">-</div>
+                    </div>
+
+                    <!-- Test Email Button -->
+                    <button onclick="sendTestEmail()" id="testEmailBtn"
+                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 12px 24px; color: white; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; transition: transform 0.2s;">
+                         Send Test Email
+                    </button>
+                    <div id="testEmailResult"
+                        style="margin-top: 1rem; padding: 1rem; border-radius: 8px; display: none;"></div>
+                </div>
+
+                <!-- Recipients List -->
+                <div class="glass-card" style="margin-bottom: 2rem;">
+                    <h3 style="margin-top: 0;">Email Recipients</h3>
+                    <div id="recipientsList" style="display: grid; gap: 0.5rem;">
+                        Loading recipients...
+                    </div>
+                </div>
+
+                <!-- Alert History -->
+                <div class="glass-card">
+                    <h3 style="margin-top: 0;">Alert History</h3>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead style="background: rgba(255,255,255,0.05);">
+                                <tr>
+                                    <th style="padding:10px; text-align: left;">Time</th>
+                                    <th style="padding:10px; text-align: left;">Metric</th>
+                                    <th style="padding:10px; text-align: left;">Value</th>
+                                    <th style="padding:10px; text-align: left;">Threshold</th>
+                                </tr>
+                            </thead>
+                            <tbody id="alertHistoryTable">
+                                <tr>
+                                    <td colspan="4" style="padding:20px; text-align:center;">Loading alert history...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+
+</html>

@@ -53,7 +53,7 @@ class LoginTracker:
     
     def log_login(self, username, role, ip_address=None, user_agent=None):
         """Log a user login"""
-        if not self.db:
+        if self.db is None:
             return False
         
         try:
@@ -73,7 +73,7 @@ class LoginTracker:
     
     def log_failed_login(self, username, ip_address=None, user_agent=None):
         """Log a failed login attempt"""
-        if not self.db:
+        if self.db is None:
             return False
         
         try:
@@ -93,7 +93,7 @@ class LoginTracker:
     
     def get_recent_logins(self, limit=10):
         """Get recent login records"""
-        if not self.db:
+        if self.db is None:
             return []
         
         try:
@@ -114,7 +114,7 @@ class LoginTracker:
     
     def get_login_stats(self):
         """Get login statistics"""
-        if not self.db:
+        if self.db is None:
             return {}
         
         try:

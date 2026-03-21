@@ -1,10 +1,11 @@
 import numpy as np
 import pandas as pd
 import sklearn
-import streamlit
+import streamlit  # Used only for version checking during setup verification
 import joblib
 
 print("✅ Setup Successful!")
+
 
 print("NumPy version:", np.__version__)
 print("Pandas version:", pd.__version__)

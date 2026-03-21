@@ -11,3 +11,7 @@ flask
 flask-cors
 pymongo
 google-generativeai
+groq
+sendgrid==6.11.0
+python-dotenv==1.0.0
+psutil

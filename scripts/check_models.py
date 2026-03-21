@@ -1,7 +1,19 @@
 import google.generativeai as genai
 import sys
+import os
 
-API_KEY = "AIzaSyC6MI7Z9rG_8kTMgk12-1_FH6TlOLrqp6s"
+# SECURITY: Never hardcode API keys in source code!
+# Set the API key as an environment variable: GOOGLE_API_KEY
+# Example: set GOOGLE_API_KEY=your_api_key_here (Windows)
+# Example: export GOOGLE_API_KEY=your_api_key_here (Linux/Mac)
+
+API_KEY = os.environ.get("GOOGLE_API_KEY", "")
+
+if not API_KEY:
+    with open("models_list.txt", "w") as f:
+        f.write("Error: GOOGLE_API_KEY environment variable not set.\n")
+        f.write("Please set the environment variable before running this script.\n")
+    sys.exit(1)
 
 try:
     with open("models_list.txt", "w") as f:
