@@ -50,9 +50,19 @@
     
     Install dependencies
     
+    Copy .env.example to .env and set optional API keys
+    
+    Run python run_all.py for the backend + frontend development stack
+    
     Run monitoring and prediction modules
     
     View results on the dashboard
+
+### 🆕 Added Utilities
+
+    One-command local launcher: python run_all.py
+    
+    Structured remediation planning API: GET or POST /api/resolution-preview
 
 ## 📜 Note
 ### 📜 License
