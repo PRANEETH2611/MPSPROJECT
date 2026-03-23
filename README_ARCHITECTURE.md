@@ -31,6 +31,7 @@
      - `styles.css` - Modern CSS styling
      - `app.js` - JavaScript logic and API calls
    - **Run**: Open `frontend/index.html` in browser (or use a local server)
+   - **Launcher**: `python run_all.py`
 
 ## How to Run Separated Version
 
@@ -44,6 +45,12 @@ pip install -r requirements.txt
 python backend/app.py
 ```
 Backend will run on `http://localhost:5000`
+
+### Optional: Start Backend + Frontend Together
+```bash
+python run_all.py
+```
+This starts the Flask backend and a lightweight static file server for `frontend/`.
 
 ### Step 3: Open Frontend
 Option A: Direct file open

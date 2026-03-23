@@ -25,6 +25,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database.login_tracker import get_login_tracker
+from decision_engine.resolution_model import build_resolution_plan
 
 # Serve static files from 'frontend' folder
 app = Flask(__name__, static_folder="../frontend", static_url_path="")
@@ -1411,6 +1412,31 @@ def analyze_anomaly():
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+@app.route('/api/resolution-preview', methods=['GET', 'POST'])
+def resolution_preview():
+    """Return a deterministic remediation plan for the latest or provided record."""
+    try:
+        if request.method == 'POST':
+            payload = request.get_json() or {}
+            record = payload.get("record", payload)
+        else:
+            if df.empty:
+                return jsonify({"success": False, "error": "No data available"}), 404
+            record = df.iloc[-1].to_dict()
+
+        if record is None:
+            return jsonify({"success": False, "error": "No record provided"}), 400
+
+        plan = build_resolution_plan(record)
+        return jsonify({
+            "success": True,
+            "record": record,
+            "resolution": plan
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 if __name__ == '__main__':
     print("ðŸš€ Starting AIOps Backend API Server...")
     print(f"ðŸ“Š Data file: {DATA_FILE}")
@@ -1434,5 +1460,4 @@ if __name__ == '__main__':
         alert_monitor = None
     
     app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)
-
 
